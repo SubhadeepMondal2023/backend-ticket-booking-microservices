@@ -7,9 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.ticketbooking.inventoryservice.entity.Event;
+import com.example.ticketbooking.inventoryservice.entity.Venue;
 import com.example.ticketbooking.inventoryservice.repository.EventRepository;
 import com.example.ticketbooking.inventoryservice.repository.VenueRepository;
 import com.example.ticketbooking.inventoryservice.response.EventInventoryResponse;
+import com.example.ticketbooking.inventoryservice.response.VenueInventoryResponse;
 
 @Service
 public class InventoryService {
@@ -32,4 +34,14 @@ public class InventoryService {
                 .venue(event.getVenue())
                 .build()).collect(Collectors.toList());
     }  
+
+    public VenueInventoryResponse getVenueInformation(final Long venueId) {
+        final Venue venue = venueRepository.findById(venueId).orElse(null);
+
+        return VenueInventoryResponse.builder()
+                .venueId(venue.getId())
+                .venueName(venue.getName())
+                .totalCapacity(venue.getTotalCapacity())
+                .build();
+    }
 }
