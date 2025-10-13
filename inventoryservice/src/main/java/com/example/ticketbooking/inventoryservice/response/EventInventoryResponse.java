@@ -14,9 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventInventoryResponse {
-    private Long eventId;
     private String event;
     private Long capacity;
     private Venue venue;
-    private BigDecimal ticketPrice;
 }
