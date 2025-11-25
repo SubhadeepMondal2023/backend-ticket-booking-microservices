@@ -13,7 +13,10 @@ import com.example.ticketbooking.inventoryservice.repository.VenueRepository;
 import com.example.ticketbooking.inventoryservice.response.EventInventoryResponse;
 import com.example.ticketbooking.inventoryservice.response.VenueInventoryResponse;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class InventoryService {
 
     private final EventRepository eventRepository;
@@ -55,5 +58,11 @@ public class InventoryService {
                 .ticketPrice(event.getTicketPrice())
                 .eventId(event.getId())
                 .build();
+    }
+    public void updateEventCapacity(final Long eventId, final Long ticketsBooked) {
+        final Event event = eventRepository.findById(eventId).orElse(null);
+        event.setLeftCapacity(event.getLeftCapacity() - ticketsBooked);
+        eventRepository.saveAndFlush(event);
+        log.info("Updated event capacity for event id: {} with tickets booked: {}", eventId, ticketsBooked);
     }
 }
