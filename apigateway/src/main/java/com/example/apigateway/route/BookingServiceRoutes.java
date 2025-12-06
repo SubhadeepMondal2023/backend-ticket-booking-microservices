@@ -1,7 +1,7 @@
 package com.example.apigateway.route;
 
-import org.springframework.cloud.gateway.server.mvc.common.MvcUtils;
 import org.springframework.cloud.gateway.server.mvc.filter.CircuitBreakerFilterFunctions;
+import org.springframework.cloud.gateway.server.mvc.filter.FilterFunctions;
 import org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions;
 import org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions;
 import org.springframework.context.annotation.Bean;
@@ -20,12 +20,21 @@ public class BookingServiceRoutes {
     public RouterFunction<ServerResponse> bookingRoutes() {
         return GatewayRouterFunctions.route("booking-service")
                 .route(RequestPredicates.POST("/api/v1/booking"),
-                        request -> {
-                            MvcUtils.setRequestUrl(request, URI.create("http://localhost:8081/api/v1/booking"));
-                            return HandlerFunctions.http().handle(request);
-                        })
+                        HandlerFunctions.http("http://localhost:8081"))
                 .filter(CircuitBreakerFilterFunctions.circuitBreaker("bookingServiceCircuitBreaker",
                         URI.create("forward:/fallbackRoute")))
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> bookingServiceApiDocs() {
+        return GatewayRouterFunctions.route("booking-service-api-docs")
+                .route(RequestPredicates.path("/docs/bookingservice/**"),
+                        HandlerFunctions.http("http://localhost:8081"))
+                // THIS FIXES THE 404:
+                // It takes "/docs/bookingservice/v3/api-docs" 
+                // and rewrites it to "/v3/api-docs" before sending to port 8081
+                .filter(FilterFunctions.rewritePath("/docs/bookingservice/(?<segment>.*)", "/${segment}"))
                 .build();
     }
 
