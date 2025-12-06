@@ -1,10 +1,12 @@
 package com.example.apigateway.route;
 
 import org.springframework.cloud.gateway.server.mvc.common.MvcUtils;
+import org.springframework.cloud.gateway.server.mvc.filter.CircuitBreakerFilterFunctions;
 import org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions;
 import org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.function.RequestPredicates;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerResponse;
@@ -22,6 +24,17 @@ public class BookingServiceRoutes {
                             MvcUtils.setRequestUrl(request, URI.create("http://localhost:8081/api/v1/booking"));
                             return HandlerFunctions.http().handle(request);
                         })
+                .filter(CircuitBreakerFilterFunctions.circuitBreaker("bookingServiceCircuitBreaker",
+                        URI.create("forward:/fallbackRoute")))
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> fallbackRoute() {
+        return GatewayRouterFunctions.route("fallbackRoute")
+                .route(RequestPredicates.POST("/fallbackRoute"),
+                        request -> ServerResponse.status(HttpStatus.SERVICE_UNAVAILABLE)
+                                .body("Booking service is currently unavailable. Please try again later."))
                 .build();
     }
 }
