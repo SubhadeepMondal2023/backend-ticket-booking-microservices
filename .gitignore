@@ -43,3 +43,27 @@ logs/
 ### Maven & Gradle ###
 .mvn/
 .gradle/
+
+### Docker Volumes & Data ###
+volume-data/
+docker/mysql/data/
+mysql_data/
+**/volume-data/
+**/mysql_data/
+
+### Environment Files ###
+.env
+.env.local
+.env.*.local
+
+### Application Logs ###
+spring.log
+application.log
+*.log
+
+### Temporary Files ###
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
