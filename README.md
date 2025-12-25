@@ -14,7 +14,7 @@ A learning-focused ticket booking example that demonstrates building a small mic
 
 * **Microservices Patterns:** Shows request routing (API Gateway), decoupled services (Booking → Order → Inventory), and domain separation (each service owns its data and API).
 * **Event-driven integration:** Demonstrates producing and consuming domain events (`BookingEvent`) via Kafka so services can react asynchronously and scale independently.
-* **Data management:** Uses Flyway migrations to keep schema changes versioned and reproducible — a pattern used in production systems to avoid ad-hoc SQL scripts.
+* **Data management:** Uses Flyway migrations to keep schema changes versioned and reproducible which is a pattern used in production systems to avoid ad-hoc SQL scripts.
 * **Security:** Uses Keycloak as an external OAuth2/OpenID provider to illustrate how services validate JWTs and how gateways centralize access control.
 * **Resilience & Observability:** Shows Resilience4j circuit breakers and Spring Actuator to make services robust and observable under partial failure.
 * **Developer UX:** Uses SpringDoc/OpenAPI so each service exposes interactive API docs, and the gateway aggregates doc links for easier exploration.
@@ -25,6 +25,7 @@ A learning-focused ticket booking example that demonstrates building a small mic
 ![Architecture Diagram](images/architecture.jpg)
 
 1.  **Clients** call the **API Gateway** which routes requests to the appropriate backend service and exposes consolidated API docs.
+![API Gateway](images/apigateway.png)
 2.  **Booking service** receives booking requests and publishes `BookingEvent` messages to Kafka.
 3.  **Order service** consumes `BookingEvents`, persists order records, and calls **Inventory service** to decrement available tickets.
 4.  **Inventory service** owns the event and venue data, exposes read and update endpoints, and manages schema via Flyway.
@@ -48,6 +49,7 @@ A learning-focused ticket booking example that demonstrates building a small mic
 * **Keycloak:** Provides an off-the-shelf identity provider to model real security flows (token issuance, JWK verification) without building auth from scratch.
 * **Spring Cloud Gateway (MVC):** Demonstrates centralized routing, path rewriting, and applying global resilience/security concerns.
 * **Resilience4j:** Lightweight circuit breaker/timeout/retry primitives to show defensive programming when services fail or are slow.
+![Resilience4j Circuit Breaker](images/circuitbreaker.png)
 * **SpringDoc / OpenAPI:** Makes it easy to inspect APIs and try requests in a browser.
 
 
