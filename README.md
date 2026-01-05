@@ -2,20 +2,20 @@
 
 A project that shows how to build multiple small services that work together. It covers real-world topics like routing requests, services talking to each other, event-based messaging with Kafka, managing database changes, securing APIs with Keycloak, and making services reliable.
 
-## Why This Project / What You'll Learn
+## Why This Project ?
 
 * How Spring Boot services work together in a microservices setup
 * When to use Kafka for messages vs REST calls for direct requests
 * How to secure APIs using an external identity system (Keycloak)
 
 
-## Key Ideas Shown Here
+## Key Ideas Implemented
 
 * **Microservices Patterns:** Shows how to route requests through a gateway, keep services independent, and have each service manage its own database.
 * **Event-based Communication:** Uses Kafka to let services send messages to each other asynchronously, so they can work independently and scale better.
 * **API Security:** Uses Keycloak to handle user authentication and token validation across services.
 
-## How Everything Works Together (Conceptual)
+## How Everything Works Together
 
 ![Architecture Diagram](images/architecture.jpg)
 
