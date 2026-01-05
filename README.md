@@ -1,95 +1,53 @@
 ﻿# Backend Ticket Booking Microservices
 
-A learning-focused ticket booking example that demonstrates building a small microservices ecosystem with realistic concerns: API gateway routing, service-to-service communication, event-driven integration with Kafka, database migrations, security with an identity provider, and resilience patterns.
+A project that shows how to build multiple small services that work together. It covers real-world topics like routing requests, services talking to each other, event-based messaging with Kafka, managing database changes, securing APIs with Keycloak, and making services reliable.
 
-## Why this project / Learning Goals
-* How small Spring Boot services interact in a microservices setup.
-* How to integrate asynchronous messaging (Kafka) and synchronous REST calls.
-* How to manage schema changes reliably with Flyway.
-* How to secure APIs using an external identity provider (Keycloak).
-* How to add resiliency (circuit breakers, timeouts) and developer ergonomics (OpenAPI / Swagger).
+## Why This Project / What You'll Learn
 
-
-## What i learnt / Key Concepts Demonstrated
-
-* **Microservices Patterns:** Shows request routing (API Gateway), decoupled services (Booking → Order → Inventory), and domain separation (each service owns its data and API).
-* **Event-driven integration:** Demonstrates producing and consuming domain events (`BookingEvent`) via Kafka so services can react asynchronously and scale independently.
-* **Data management:** Uses Flyway migrations to keep schema changes versioned and reproducible which is a pattern used in production systems to avoid ad-hoc SQL scripts.
-* **Security:** Uses Keycloak as an external OAuth2/OpenID provider to illustrate how services validate JWTs and how gateways centralize access control.
-* **Resilience & Observability:** Shows Resilience4j circuit breakers and Spring Actuator to make services robust and observable under partial failure.
-* **Developer UX:** Uses SpringDoc/OpenAPI so each service exposes interactive API docs, and the gateway aggregates doc links for easier exploration.
+* How Spring Boot services work together in a microservices setup
+* When to use Kafka for messages vs REST calls for direct requests
+* How to secure APIs using an external identity system (Keycloak)
 
 
-## Architecture (Conceptual)
+## Key Ideas Shown Here
+
+* **Microservices Patterns:** Shows how to route requests through a gateway, keep services independent, and have each service manage its own database.
+* **Event-based Communication:** Uses Kafka to let services send messages to each other asynchronously, so they can work independently and scale better.
+* **API Security:** Uses Keycloak to handle user authentication and token validation across services.
+
+## How Everything Works Together (Conceptual)
 
 ![Architecture Diagram](images/architecture.jpg)
 
-1.  **Clients** call the **API Gateway** which routes requests to the appropriate backend service and exposes consolidated API docs.
+1.  **Clients** call the **API Gateway**, which routes requests to the right service and shows you the API documentation.
 ![API Gateway](images/apigateway.png)
-2.  **Booking service** receives booking requests and publishes `BookingEvent` messages to Kafka.
-3.  **Order service** consumes `BookingEvents`, persists order records, and calls **Inventory service** to decrement available tickets.
-4.  **Inventory service** owns the event and venue data, exposes read and update endpoints, and manages schema via Flyway.
+2.  **Booking Service** takes booking requests and sends messages to Kafka.
+3.  **Order Service** listens for those messages, saves order information, and asks **Inventory Service** to reduce available tickets.
+4.  **Inventory Service** stores event and venue data, provides endpoints to read and update information, and manages database changes through Flyway.
 
 
-## Services & Purpose
+## Services and What They Do
 
-| Service | Description | Use-Case Demonstrated |
+| Service | What it does | Example Feature |
 | :--- | :--- | :--- |
-| **apigateway** | Central entrypoint. Handles routing, API docs aggregation, JWT validation, and resilience policies. | Centralized access control and conditional forwarding (path rewrites). |
-| **inventoryservice** | Source of truth for venues and events. | Data ownership, schema migrations (Flyway), and synchronous REST APIs. |
-| **bookingservice** | Accepts bookings and publishes events to Kafka. | How edge services translate user action into domain events for downstream processing. |
-| **orderservice** | Kafka consumer that materializes events into persistent orders and interacts with inventory. | Eventual consistency and coordinated updates using both async and sync calls. |
+| **apigateway** | Entry point for all requests. Routes them to the right service, checks security tokens, and shows combined API docs. | Controls who can access which services and forwards requests to the right place. |
+| **inventoryservice** | Keeps track of events and venues. The main source of truth for this information. | Manages how many tickets are available and updates event information safely. |
+| **bookingservice** | Receives booking requests from users and sends messages about those bookings. | Takes a booking request and tells other services what happened via Kafka. |
+| **orderservice** | Listens for booking messages and creates order records. Also talks to inventory service. | Saves booking information permanently and makes sure tickets are updated. |
 
 
-## Key Technical Choices
+## Technology Choices and Why
 
-* **Spring Boot (Spring Web, Data JPA):** Fast way to create production-grade REST services and database integration with minimal boilerplate.
-* **Kafka (spring-kafka):** Chosen to show event-driven, decoupled communication patterns and to simulate realistic asynchronous workflows.
-* **Flyway:** Chosen for simple, file-based, ordered DB migrations which are easy to reason about and integrate with CI/CD.
-* **Keycloak:** Provides an off-the-shelf identity provider to model real security flows (token issuance, JWK verification) without building auth from scratch.
-* **Spring Cloud Gateway (MVC):** Demonstrates centralized routing, path rewriting, and applying global resilience/security concerns.
-* **Resilience4j:** Lightweight circuit breaker/timeout/retry primitives to show defensive programming when services fail or are slow.
-![Resilience4j Circuit Breaker](images/circuitbreaker.png)
-* **SpringDoc / OpenAPI:** Makes it easy to inspect APIs and try requests in a browser.
+* **Spring Boot (Spring Web, Data JPA):** Makes it easy to build REST services and connect to databases with less boilerplate code.
+* **Kafka (spring-kafka):** Used for sending messages between services asynchronously, letting them work independently.
+* **Keycloak:** A ready-made system for handling user login and access tokens, so you don't have to build security from scratch.
+* **Spring Cloud Gateway (MVC):** Sits in front of all services to route requests, handle security checks, and protect services from overload.
 
 
-## Important Files
 
-* `docker-compose.yml` — Brings up MySQL, Kafka, Keycloak, and tooling used by the examples.
-* `migration` — Flyway migrations (schema and initial data).
-* `apigateway/src/main/java/.../route` — Gateway route definitions and docs rewrite logic.
-* `BookingRequest.java` — Booking payload shape.
-* `BookingEvent.java` — Event shape sent to Kafka.
+### Example: Making a Booking
 
-
-## Ports & Infrastructure
-
-| Component | Port (Host) | Internal/Notes |
-| :--- | :--- | :--- |
-| **API Gateway** | `8090` | Main Entrypoint |
-| **Inventory Service** | `8080` | Direct Access |
-| **Booking Service** | `8081` | Direct Access |
-| **Order Service** | `8082` | Direct Access |
-| **Kafka UI** | `8084` | Visualizing Topics |
-| **Keycloak** | `8091` | Identity Provider |
-| **MySQL** | `3307` | Maps to container `3306` |
-| **Kafka Broker** | `9092` | Internal `29092` |
-
----
-
-## Core HTTP Endpoints (For Quick Exploration)
-
-* **Gateway Swagger UI:** [http://localhost:8090/swagger-ui.html](http://localhost:8090/swagger-ui.html)
-* **Booking (via gateway):** `POST http://localhost:8090/api/v1/booking`
-* **Inventory (direct to service):**
-    * `GET http://localhost:8080/api/v1/inventory/events`
-    * `GET http://localhost:8080/api/v1/inventory/venue/{venueId}`
-    * `GET http://localhost:8080/api/v1/inventory/event/{eventId}`
-    * `PUT http://localhost:8080/api/v1/inventory/event/{eventId}/capacity/{capacity}`
-
-### Example Booking Request
-
-**Request JSON:**
+**Send this JSON:**
 
 ```json
 {
@@ -99,38 +57,30 @@ A learning-focused ticket booking example that demonstrates building a small mic
 }
 ```
 
-### What happens:
+**What happens behind the scenes:**
 
-1.  **Booking service** validates/accepts the request.
-2.  Builds a `BookingEvent` and publishes it to Kafka.
-3.  **OrderService** consumes it, writes an Order record.
-4.  **OrderService** calls **Inventory service** to decrement capacity.
+1.  **Booking Service** accepts the request and checks it's valid.
+2.  Creates a message and sends it to Kafka.
+3.  **Order Service** receives that message and saves the order.
+4.  **Order Service** calls **Inventory Service** to reduce the ticket count.
 
 
-## Running Locally (Recommended Dev Flow)
+## Running Locally (Suggested Workflow)
 
-### Prerequisites
-* Java 21 (or compatible JDK)
-* Maven (or use included `mvnw`)
+### Before You Start
+* Java 21 (or a similar JDK version)
+* Maven (or use the included `mvnw`)
 * Docker & Docker Compose
 
 ### Steps
 
-1.  **Enable Lombok** annotation processing in your IDE.
-2.  **Start Infrastructure:**
+1.  **Enable Lombok** in your IDE (this tool reduces boilerplate code).
+2.  **Start the Infrastructure:**
     
     ```powershell
     docker-compose up -d
     ```
-    *(This brings up MySQL, Kafka, and Keycloak)*
+    *(This starts MySQL, Kafka, and Keycloak)*
 
-3.  **Start Services:**
-    Run the `main` method in each Spring Boot application (Gateway, Booking, Inventory, Order) in separate terminals or IDE tabs.
-
-
-## Common Pitfalls & Notes
-
-* **DB Connectivity:** Services expect MySQL at `localhost:3307` (mapped by the compose file). If you run DB elsewhere, update `spring.datasource.url` in each service's `application.properties`.
-* **Hostname vs Localhost:** If you dockerize the services themselves (instead of running on the host), use container hostnames (compose service names) rather than `localhost`.
-* **Keycloak Availability:** Gateway fetches JWKs from Keycloak. If Keycloak is not running or the realm is not imported, token validation will fail.
-* **Swagger through Gateway:** The gateway rewrites paths for each service's OpenAPI docs — you can open aggregated docs at the gateway UI.
+3.  **Start Each Service:**
+    Run the main method in each service (Gateway, Booking, Inventory, Order) in separate terminal windows or IDE tabs.
